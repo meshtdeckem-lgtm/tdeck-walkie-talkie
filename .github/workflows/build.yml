@@ -24,11 +24,6 @@ jobs:
         pip install esptool platformio
         pio --version
 
-    - name: Clone Codec2 library
-      run: |
-        mkdir -p lib
-        git clone --depth 1 https://github.com/sh123/esp32_codec2 lib/esp32_codec2
-
     - name: Build firmware
       run: pio run -e tdeck_plus
 
