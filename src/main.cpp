@@ -26,11 +26,11 @@
 #include "esp_random.h"
 #include "codec2.h"
 
-#include "src/radio_config.h"
-#include "src/duty_cycle.h"
-#include "src/audio_dsp.h"
-#include "src/ui_lvgl.h"
-#include "src/bluetooth_mgr.h"
+#include "radio_config.h"
+#include "duty_cycle.h"
+#include "audio_dsp.h"
+#include "ui_lvgl.h"
+#include "bluetooth_mgr.h"
 
 // ════════════════════════════════════════════════════════════════════════════
 //                            HARDWARE PIN MAP
