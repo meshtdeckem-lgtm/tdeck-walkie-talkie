@@ -1,0 +1,78 @@
+.github/workflows/build.yml
+name: Build T-Deck Plus Walkie-Talkie
+
+on:
+  push:
+    branches: [main, master]
+  pull_request:
+    branches: [main, master]
+  release:
+    types: [created]
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v4
+
+    - name: Set up Python
+      uses: actions/setup-python@v5
+      with: { python-version: '3.11' }
+
+    - name: Install esptool + PlatformIO
+      run: |
+        pip install esptool platformio
+        pio --version
+
+    - name: Clone Codec2 library
+      run: |
+        mkdir -p lib
+        git clone --depth 1 https://github.com/sh123/esp32_codec2 lib/esp32_codec2
+
+    - name: Build firmware
+      run: pio run -e tdeck_plus
+
+    # M5 Launcher needs the raw app binary
+    - name: Rename raw firmware for M5 Launcher
+      run: cp .pio/build/tdeck_plus/firmware.bin tdeck_walkie_M5Launcher.bin
+
+    # Web flasher / standalone install needs a merged binary
+    - name: Merge firmware for web/standalone flashing
+      run: |
+        esptool.py --chip esp32s3 merge_bin \
+          -o tdeck_walkie_merged.bin \
+          --flash_mode qio --flash_freq 80m --flash_size 16MB \
+          0x0000  .pio/build/tdeck_plus/bootloader.bin \
+          0x8000  .pio/build/tdeck_plus/partitions.bin \
+          0xe000  ~/.platformio/packages/framework-arduinoespressif32/tools/partitions/boot_app0.bin \
+          0x10000 .pio/build/tdeck_plus/firmware.bin
+
+    - name: Report
+      run: |
+        echo "=== Build artifacts ==="
+        ls -lh tdeck_walkie_M5Launcher.bin tdeck_walkie_merged.bin
+
+    - name: Upload M5 Launcher binary
+      uses: actions/upload-artifact@v4
+      with:
+        name: tdeck_walkie_M5Launcher
+        path: tdeck_walkie_M5Launcher.bin
+        retention-days: 30
+
+    - name: Upload merged binary
+      uses: actions/upload-artifact@v4
+      with:
+        name: tdeck_walkie_merged
+        path: tdeck_walkie_merged.bin
+        retention-days: 30
+
+    - name: Attach to release
+      if: github.event_name == 'release'
+      uses: softprops/action-gh-release@v2
+      with:
+        files: |
+          tdeck_walkie_M5Launcher.bin
+          tdeck_walkie_merged.bin
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
