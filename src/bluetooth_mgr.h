@@ -90,7 +90,7 @@ public:
         NimBLEAdvertising *adv = NimBLEDevice::getAdvertising();
         adv->addServiceUUID(service_->getUUID());
         adv->setName(deviceName);
-        adv->enableScanResponse(true);
+        adv->setScanResponse(true);
         adv->start();
 
         running_ = true;
@@ -119,7 +119,7 @@ private:
     class ConfigCharCB : public NimBLECharacteristicCallbacks {
     public:
         ConfigCharCB(BluetoothMgr *m) : mgr_(m) {}
-        void onWrite(NimBLECharacteristic *c, NimBLEConnInfo &info) override {
+        void onWrite(NimBLECharacteristic *c) override {
             auto val = c->getValue();
             if (val.length() == sizeof(ConfigCmd) && mgr_->onConfigCb_) {
                 ConfigCmd cmd;
@@ -133,7 +133,7 @@ private:
     class KeyCharCB : public NimBLECharacteristicCallbacks {
     public:
         KeyCharCB(BluetoothMgr *m) : mgr_(m) {}
-        void onWrite(NimBLECharacteristic *c, NimBLEConnInfo &info) override {
+        void onWrite(NimBLECharacteristic *c) override {
             auto val = c->getValue();
             if (val.length() == 32 && mgr_->onKeyCb_) {
                 mgr_->onKeyCb_(val.data());
