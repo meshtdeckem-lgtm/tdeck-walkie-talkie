@@ -1,5 +1,3 @@
-src/audi
-
 /**
  * audio_dsp.h — Noise gate + simple voice DSP
  *
